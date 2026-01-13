@@ -1,4 +1,5 @@
 "use client";
+import { useSession } from "next-auth/react";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { signIn, getSession } from "next-auth/react";
@@ -11,7 +12,29 @@ function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [emailError, setEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
+    const { data: session, status } = useSession();
+const [isRedirecting, setIsRedirecting] = useState(false);
+
     const router = useRouter();
+
+    useEffect(() => {
+    if (status === "loading") return;
+
+    if (session?.user?.role) {
+        setIsRedirecting(true);
+
+        const role = session.user.role;
+
+        if (role === "admin") {
+            router.replace("/dashboard/admin");
+        } else if (role === "user") {
+            router.replace("/dashboard/user");
+        } else {
+            router.replace("/dashboard");
+        }
+    }
+}, [session, status, router]);
+
 
     useEffect(() => {
         if (typeof document !== "undefined") {
@@ -74,6 +97,10 @@ function LoginPage() {
                 redirect: false,
             });
 
+            if (!res?.ok) {
+                setError(res?.error || "Login failed");
+            }
+
             if (res?.ok) {
                 // Wait a bit for session to update
                 await new Promise((resolve) => setTimeout(resolve, 500));
@@ -98,6 +125,19 @@ function LoginPage() {
         } finally {
             setIsLoading(false);
         }
+    }
+
+    if (status === "loading" || isRedirecting) {
+        return (
+            <div style={styles.container}>
+                <div style={{ textAlign: "center" }}>
+                    <div style={styles.loadingSpinner}></div>
+                    <p style={styles.loadingText}>
+                        Checking your session...
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -256,6 +296,22 @@ function LoginPage() {
 }
 
 const styles = {
+    loadingSpinner: {
+        width: "3rem",
+        height: "3rem",
+        border: "4px solid #e5e7eb",
+        borderTop: "4px solid #2563eb",
+        borderRadius: "50%",
+        animation: "spin 1s linear infinite",
+        margin: "0 auto",
+    },
+
+    loadingText: {
+        marginTop: "1rem",
+        fontSize: "0.875rem",
+        color: "#374151",
+    },
+
     container: {
         minHeight: '100vh',
         display: 'flex',
