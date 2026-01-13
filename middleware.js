@@ -8,20 +8,33 @@ export async function middleware(req) {
   });
 
   const { pathname, origin } = req.nextUrl;
-  
+
+  // 🚨 1. BELUM LOGIN → STOP TOTAL
   if (!token && pathname.startsWith("/dashboard")) {
-    new URL("/error/401", req.nextUrl.origin)
+    return NextResponse.redirect(
+      new URL("/error/401", origin)
+    );
   }
 
-  if (pathname.startsWith("/dashboard/admin") && token?.role !== "admin") {
-    return NextResponse.redirect(new URL("/error/403/admin", origin));
+  // 🛑 2. SUDAH LOGIN, TAPI ROLE SALAH
+  if (
+    token &&
+    pathname.startsWith("/dashboard/admin") &&
+    token.role !== "admin"
+  ) {
+    return NextResponse.redirect(
+      new URL("/error/403/admin", origin)
+    );
   }
 
   if (
+    token &&
     pathname.startsWith("/dashboard/user") &&
-    token?.role !== "user"
+    token.role !== "user"
   ) {
-     return NextResponse.redirect(new URL("/error/401", origin));
+    return NextResponse.redirect(
+      new URL("/error/403/user", origin)
+    );
   }
 
   return NextResponse.next();

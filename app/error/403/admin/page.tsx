@@ -34,7 +34,7 @@ export default function UnauthorizedPage() {
           fontSize: 36,
           fontWeight: "bold"
         }}>
-          401
+          403
         </div>
         
         {/* Title */}
@@ -81,11 +81,11 @@ export default function UnauthorizedPage() {
           <div style={{ 
             color: "#7f1d1d",
             fontSize: 13,
-            fontFamily: "monospace",
+            fontFamily: "monospace",  
             lineHeight: 1.5
           }}>
             • Kode: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>ERR_ADMIN_ONLY</code><br/>
-            • Status: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>401 Unauthorized</code><br/>
+            • Status: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>403 FORBIDDEN</code><br/>
             • Hak Akses: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>Admin Required</code><br/>
             • Waktu: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>{new Date().toLocaleTimeString()}</code>
           </div>

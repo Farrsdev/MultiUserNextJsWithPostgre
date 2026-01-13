@@ -34,7 +34,7 @@ export default function UnauthorizedPage() {
           fontSize: 36,
           fontWeight: "bold"
         }}>
-          401
+          403
         </div>
         
         {/* Title */}
@@ -54,7 +54,7 @@ export default function UnauthorizedPage() {
           lineHeight: 1.6,
           marginBottom: 24
         }}>
-          Halaman ini hanya dapat diakses oleh <strong style={{color: "#dc2626"}}>pengguna yang telah login</strong>
+          Halaman ini hanya dapat diakses oleh <strong style={{color: "#dc2626"}}>User</strong>
         </p>
         
         {/* Error Details Box */}
@@ -85,7 +85,7 @@ export default function UnauthorizedPage() {
             lineHeight: 1.5
           }}>
             • Kode: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>LOGIN_REQUIRED</code><br/>
-            • Status: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>401 Unauthorized</code><br/>
+            • Status: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>403 Forbidden</code><br/>
             • Hak Akses: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>Authenticated User</code><br/>
             • Waktu: <code style={{background: "#fee2e2", padding: "2px 6px", borderRadius: 4}}>{new Date().toLocaleTimeString()}</code>
           </div>
