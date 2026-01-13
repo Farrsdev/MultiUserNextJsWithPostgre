@@ -1,313 +1,159 @@
-// UserPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+"use client";
+
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function UserPage() {
-    const router = useRouter();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isUser, setIsUser] = useState(false);
-    const [user, setUser] = useState({
-        name: 'Lincoln',
-        role: 'user',
-        email: 'Linc@example.com'
-    });
-    const [userStats, setUserStats] = useState({
-        projects: 0,
-        tasks: 0,
-        completed: 0,
-        points: 0
-    });
-    const [recentProjects, setRecentProjects] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-    useEffect(() => {
-        // Simulate authentication check
-        const checkAuth = () => {
-            // For demo purposes, we'll assume user is logged in as user
-            const userRole = localStorage.getItem('userRole') || 'user';
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || true; // Default to true for demo
-            
-            if (!isLoggedIn) {
-                router.push('/login');
-                return;
-            }
-            
-            if (userRole !== 'user') {
-                router.push('/dashboard/admin');
-                return;
-            }
-            
-            setIsAuthenticated(true);
-            setIsUser(true);
-            
-            // Set user data
-            setUser({
-                name: localStorage.getItem('userName') || 'Lincoln',
-                role: userRole,
-                email: localStorage.getItem('userEmail') || 'user@example.com'
-            });
-        };
-
-        checkAuth();
-
-        // Simulate loading data
-        const timer = setTimeout(() => {
-            setUserStats({
-                projects: 5,
-                tasks: 12,
-                completed: 8,
-                points: 2450
-            });
-            
-            setRecentProjects([
-                { id: 1, name: 'Website Redesign', progress: 75, deadline: '2024-02-15' },
-                { id: 2, name: 'Mobile App Development', progress: 30, deadline: '2024-03-01' },
-                { id: 3, name: 'API Integration', progress: 100, deadline: '2024-01-30' },
-                { id: 4, name: 'UI/UX Design', progress: 50, deadline: '2024-02-28' }
-            ]);
-            
-            setIsLoading(false);
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, [router]);
-
-    const handleLogout = () => {
-        // Clear auth data
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userEmail');
-        
-        // Redirect to login
-        router.push('/login');
-    };
-
-    const handleDemoLogin = () => {
-        // For demo: simulate login as user
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userRole', 'user');
-        localStorage.setItem('userName', 'Demo User');
-        localStorage.setItem('userEmail', 'user@demo.com');
-        
-        setUser({
-            name: 'Demo User',
-            role: 'user',
-            email: 'user@demo.com'
-        });
-        
-        setIsAuthenticated(true);
-        setIsUser(true);
-    };
-
-    if (isLoading) {
-        return (
-            <div style={userStyles.loadingContainer}>
-                <div style={userStyles.spinner}></div>
-                <p style={userStyles.loadingText}>Loading dashboard...</p>
-            </div>
-        );
+  
+    const userName = session?.user?.name || "User";
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/login");
     }
 
-    if (!isAuthenticated || !isUser) {
-        return (
-            <div style={userStyles.authContainer}>
-                <div style={userStyles.authCard}>
-                    <h2 style={userStyles.authTitle}>Access Required</h2>
-                    <p style={userStyles.authText}>Please login as a user to access this page.</p>
-                    <div style={userStyles.authButtons}>
-                        <button 
-                            onClick={handleDemoLogin}
-                            style={userStyles.loginButton}
-                        >
-                            Login as Demo User
-                        </button>
-                        <button 
-                            onClick={() => router.push('/login')}
-                            style={userStyles.backButton}
-                        >
-                            Go to Login
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
+    if (session && session.user.role !== "user") {
+      router.replace("/error/403/user");
     }
+  }, [status, session, router]);
+
+  if (status === "loading") {
+    return (
+      <div style={styles.loading}>
+        <div style={styles.spinner}></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!session || session.user.role !== "user") {
+    return null;
+  }
+
+  const handleLogout = async () => {
+    await signOut({
+      redirect: true,
+      callbackUrl: "/login",
+    });
+  };
+
 
     return (
-        <div style={userStyles.container}>
+        <div style={styles.container}>
             {/* Header */}
-            <header style={userStyles.header}>
-                <div style={userStyles.headerContent}>
-                    <div style={userStyles.headerLeft}>
-                        <h1 style={userStyles.headerTitle}>User Dashboard</h1>
-                        <p style={userStyles.headerSubtitle}>Welcome back, {user?.name || 'User'}!</p>
-                    </div>
-                    <div style={userStyles.headerRight}>
-                        <div style={userStyles.userInfo}>
-                            <div style={userStyles.avatar}>
-                                {user?.name?.charAt(0) || 'U'}
-                            </div>
-                            <div style={userStyles.userDetails}>
-                                <span style={userStyles.userName}>{user?.name || 'User'}</span>
-                                <span style={userStyles.userRole}>Member</span>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={handleLogout}
-                            style={userStyles.logoutButton}
-                            className="user-logout-button"
-                        >
-                            <svg style={userStyles.logoutIcon} viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-                            </svg>
-                            Logout
-                        </button>
-                    </div>
+            <header style={styles.header}>
+                <div>
+                    <h1 style={styles.title}>My Dashboard</h1>
+                    <p style={styles.subtitle}>Welcome back, {userName}!</p>
+                </div>
+                <div style={styles.headerActions}>
+                    <div style={styles.userBadge}>USER</div>
+                    <button onClick={handleLogout} style={styles.logoutBtn}>
+                        Logout
+                    </button>
                 </div>
             </header>
 
-            {/* Stats Cards */}
-            <div style={userStyles.statsGrid}>
-                <div style={userStyles.statCard} className="user-stat-card">
-                    <div style={{...userStyles.statIcon, ...userStyles.statIconProjects}}>
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                    <div style={userStyles.statContent}>
-                        <h3 style={userStyles.statTitle}>Active Projects</h3>
-                        <p style={userStyles.statValue}>{userStats.projects}</p>
-                        <p style={userStyles.statChange}>+2 this month</p>
+            {/* Stats */}
+            <div style={styles.statsGrid}>
+                <div style={styles.statBox}>
+                    <div style={styles.statIcon}>📁</div>
+                    <div style={styles.statContent}>
+                        <p style={styles.statLabel}>Projects</p>
+                        <p style={styles.statValue}>5</p>
                     </div>
                 </div>
-
-                <div style={userStyles.statCard} className="user-stat-card">
-                    <div style={{...userStyles.statIcon, ...userStyles.statIconTasks}}>
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                    <div style={userStyles.statContent}>
-                        <h3 style={userStyles.statTitle}>Total Tasks</h3>
-                        <p style={userStyles.statValue}>{userStats.tasks}</p>
-                        <p style={userStyles.statChange}>{userStats.completed} completed</p>
+                <div style={styles.statBox}>
+                    <div style={styles.statIcon}>✅</div>
+                    <div style={styles.statContent}>
+                        <p style={styles.statLabel}>Completed</p>
+                        <p style={styles.statValue}>8</p>
                     </div>
                 </div>
-
-                <div style={userStyles.statCard} className="user-stat-card">
-                    <div style={{...userStyles.statIcon, ...userStyles.statIconProgress}}>
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                    <div style={userStyles.statContent}>
-                        <h3 style={userStyles.statTitle}>Completion Rate</h3>
-                        <p style={userStyles.statValue}>{Math.round((userStats.completed / userStats.tasks) * 100)}%</p>
-                        <p style={userStyles.statChange}>Great work!</p>
-                    </div>
-                </div>
-
-                <div style={userStyles.statCard} className="user-stat-card">
-                    <div style={{...userStyles.statIcon, ...userStyles.statIconPoints}}>
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.2 6.5 10.266a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                    <div style={userStyles.statContent}>
-                        <h3 style={userStyles.statTitle}>Reward Points</h3>
-                        <p style={userStyles.statValue}>{userStats.points.toLocaleString()}</p>
-                        <p style={userStyles.statChange}>+150 this week</p>
+                <div style={styles.statBox}>
+                    <div style={styles.statIcon}>🎯</div>
+                    <div style={styles.statContent}>
+                        <p style={styles.statLabel}>Progress</p>
+                        <p style={styles.statValue}>67%</p>
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div style={userStyles.mainContent}>
-                {/* Recent Projects */}
-                <div style={userStyles.projectsSection}>
-                    <div style={userStyles.sectionHeader}>
-                        <h2 style={userStyles.sectionTitle}>Recent Projects</h2>
-                        <button style={userStyles.newProjectButton} className="new-project-button">
-                            <svg style={userStyles.plusIcon} viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            New Project
-                        </button>
-                    </div>
-                    <div style={userStyles.projectsGrid}>
-                        {recentProjects.map(project => (
-                            <div key={project.id} style={userStyles.projectCard} className="project-card">
-                                <div style={userStyles.projectHeader}>
-                                    <h3 style={userStyles.projectTitle}>{project.name}</h3>
-                                    <span style={userStyles.projectDeadline}>
-                                        Due: {new Date(project.deadline).toLocaleDateString()}
-                                    </span>
+            <div style={styles.content}>
+                <div style={styles.section}>
+                    <h3 style={styles.sectionTitle}>My Projects</h3>
+                    <div style={styles.projectsList}>
+                        {[
+                            { name: 'Website Redesign', progress: 75, deadline: 'Feb 15' },
+                            { name: 'Mobile App Dev', progress: 30, deadline: 'Mar 1' },
+                            { name: 'API Integration', progress: 100, deadline: 'Jan 30' },
+                            { name: 'UI/UX Design', progress: 50, deadline: 'Feb 28' },
+                        ].map((project, index) => (
+                            <div key={index} style={styles.projectCard}>
+                                <div style={styles.projectHeader}>
+                                    <h4 style={styles.projectName}>{project.name}</h4>
+                                    <span style={styles.projectDeadline}>Due: {project.deadline}</span>
                                 </div>
-                                <div style={userStyles.progressContainer}>
-                                    <div style={userStyles.progressBar}>
-                                        <div 
-                                            style={{
-                                                ...userStyles.progressFill,
-                                                width: `${project.progress}%`,
-                                                backgroundColor: project.progress === 100 ? '#10b981' : 
-                                                               project.progress > 75 ? '#3b82f6' :
-                                                               project.progress > 50 ? '#f59e0b' : '#ef4444'
-                                            }}
-                                        ></div>
-                                    </div>
-                                    <span style={userStyles.progressText}>{project.progress}%</span>
+                                <div style={styles.progressBar}>
+                                    <div 
+                                        style={{
+                                            ...styles.progressFill,
+                                            width: `${project.progress}%`
+                                        }}
+                                    ></div>
                                 </div>
-                                <div style={userStyles.projectActions}>
-                                    <button style={userStyles.projectButton} className="project-button">
-                                        <svg viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                        </svg>
-                                        Edit
-                                    </button>
-                                    <button style={userStyles.projectButton} className="project-button">
-                                        <svg viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                                        </svg>
-                                        Update
-                                    </button>
+                                <div style={styles.progressLabel}>
+                                    <span>Progress</span>
+                                    <span>{project.progress}%</span>
+                                </div>
+                                <div style={styles.projectActions}>
+                                    <button style={styles.smallBtn}>View</button>
+                                    <button style={styles.smallBtn}>Edit</button>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Quick Actions */}
-                <div style={userStyles.actionsSection}>
-                    <div style={userStyles.sectionHeader}>
-                        <h2 style={userStyles.sectionTitle}>Quick Actions</h2>
+                <div style={styles.section}>
+                    <h3 style={styles.sectionTitle}>Quick Actions</h3>
+                    <div style={styles.actionsGrid}>
+                        <button style={styles.actionBtn}>
+                            <span style={styles.actionIcon}>➕</span>
+                            New Task
+                        </button>
+                        <button style={styles.actionBtn}>
+                            <span style={styles.actionIcon}>📊</span>
+                            Reports
+                        </button>
+                        <button style={styles.actionBtn}>
+                            <span style={styles.actionIcon}>⚙️</span>
+                            Settings
+                        </button>
+                        <button style={styles.actionBtn}>
+                            <span style={styles.actionIcon}>🔼</span>
+                            Upgrade
+                        </button>
                     </div>
-                    <div style={userStyles.actionsGrid}>
-                        <button style={userStyles.actionButton} className="user-action-button">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            Create Task
-                        </button>
-                        <button style={userStyles.actionButton} className="user-action-button">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                            </svg>
-                            View Reports
-                        </button>
-                        <button style={userStyles.actionButton} className="user-action-button">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                            </svg>
-                            Profile Settings
-                        </button>
-                        <button style={userStyles.actionButton} className="user-action-button">
-                            <svg viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                            </svg>
-                            Upgrade Plan
-                        </button>
+                    
+                    <div style={styles.userInfoCard}>
+                        <h4 style={styles.infoTitle}>Account Info</h4>
+                        <div style={styles.infoRow}>
+                            <span>Name:</span>
+                            <span>{userName}</span>
+                        </div>
+                        <div style={styles.infoRow}>
+                            <span>Role:</span>
+                            <span>Member</span>
+                        </div>
+                        <div style={styles.infoRow}>
+                            <span>Status:</span>
+                            <span style={styles.statusActive}>Active</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -315,302 +161,174 @@ function UserPage() {
     );
 }
 
-const userStyles = {
+const styles = {
     container: {
         minHeight: '100vh',
-        backgroundColor: '#f3f4f6'
+        backgroundColor: '#f8f9fa',
+        padding: '20px'
     },
-    authContainer: {
+    loading: {
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
-        backgroundColor: '#f3f4f6',
-        padding: '20px'
+        backgroundColor: '#f8f9fa'
+    },
+    spinner: {
+        width: '40px',
+        height: '40px',
+        border: '3px solid rgba(124, 58, 237, 0.2)',
+        borderTop: '3px solid #7c3aed',
+        borderRadius: '50%',
+        marginBottom: '15px'
     },
     authCard: {
         backgroundColor: 'white',
         borderRadius: '12px',
-        padding: '40px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        padding: '40px 30px',
         textAlign: 'center',
-        maxWidth: '400px',
-        width: '100%'
+        maxWidth: '350px',
+        margin: '100px auto',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+    },
+    userIcon: {
+        fontSize: '48px',
+        marginBottom: '20px'
     },
     authTitle: {
         fontSize: '24px',
-        fontWeight: '700',
-        color: '#111827',
-        margin: '0 0 16px 0'
+        fontWeight: '600',
+        marginBottom: '10px',
+        color: '#333'
     },
     authText: {
-        fontSize: '16px',
-        color: '#6b7280',
-        margin: '0 0 32px 0',
+        color: '#666',
+        marginBottom: '30px',
         lineHeight: '1.5'
     },
-    authButtons: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px'
-    },
-    loginButton: {
-        padding: '14px 20px',
+    authButton: {
+        width: '100%',
+        padding: '14px',
         backgroundColor: '#7c3aed',
         color: 'white',
         border: 'none',
         borderRadius: '8px',
         fontSize: '16px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        transition: 'background-color 0.2s'
-    },
-    backButton: {
-        padding: '14px 20px',
-        backgroundColor: 'transparent',
-        color: '#7c3aed',
-        border: '1px solid #7c3aed',
-        borderRadius: '8px',
-        fontSize: '16px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        transition: 'all 0.2s'
-    },
-    loadingContainer: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        backgroundColor: '#f3f4f6'
-    },
-    spinner: {
-        width: '50px',
-        height: '50px',
-        border: '5px solid #e5e7eb',
-        borderTop: '5px solid #7c3aed',
-        borderRadius: '50%',
-        animation: 'spin 1s linear infinite',
-        marginBottom: '20px'
-    },
-    loadingText: {
-        fontSize: '18px',
-        color: '#6b7280',
-        fontWeight: '500'
+        fontWeight: '500',
+        cursor: 'pointer'
     },
     header: {
-        backgroundColor: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '20px 0'
-    },
-    headerContent: {
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '0 20px',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        marginBottom: '30px',
+        paddingBottom: '20px',
+        borderBottom: '1px solid #eaeaea'
     },
-    headerLeft: {},
-    headerTitle: {
-        fontSize: '24px',
+    title: {
+        fontSize: '28px',
         fontWeight: '700',
-        color: '#111827',
-        margin: '0'
+        margin: '0',
+        color: '#333'
     },
-    headerSubtitle: {
-        fontSize: '14px',
-        color: '#6b7280',
+    subtitle: {
+        color: '#666',
         margin: '5px 0 0 0'
     },
-    headerRight: {
+    headerActions: {
         display: 'flex',
         alignItems: 'center',
-        gap: '30px'
+        gap: '15px'
     },
-    userInfo: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px'
-    },
-    avatar: {
-        width: '40px',
-        height: '40px',
-        borderRadius: '50%',
+    userBadge: {
         backgroundColor: '#7c3aed',
         color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: '600',
-        fontSize: '18px'
-    },
-    userDetails: {
-        display: 'flex',
-        flexDirection: 'column'
-    },
-    userName: {
-        fontSize: '14px',
-        fontWeight: '600',
-        color: '#111827'
-    },
-    userRole: {
+        padding: '6px 12px',
+        borderRadius: '20px',
         fontSize: '12px',
-        color: '#6b7280'
+        fontWeight: '600'
     },
-    logoutButton: {
+    logoutBtn: {
         padding: '10px 20px',
-        backgroundColor: '#ef4444',
-        color: 'white',
-        border: 'none',
-        borderRadius: '8px',
+        backgroundColor: 'transparent',
+        color: '#ff4444',
+        border: '1px solid #ff4444',
+        borderRadius: '6px',
         fontSize: '14px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        transition: 'background-color 0.2s'
-    },
-    logoutIcon: {
-        width: '16px',
-        height: '16px'
+        fontWeight: '500',
+        cursor: 'pointer'
     },
     statsGrid: {
-        maxWidth: '1200px',
-        margin: '30px auto',
-        padding: '0 20px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '20px'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '20px',
+        marginBottom: '40px'
     },
-    statCard: {
+    statBox: {
         backgroundColor: 'white',
+        padding: '25px',
         borderRadius: '12px',
-        padding: '24px',
         display: 'flex',
         alignItems: 'center',
         gap: '20px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        transition: 'transform 0.2s, box-shadow 0.2s'
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
     },
     statIcon: {
-        width: '56px',
-        height: '56px',
-        borderRadius: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    statIconProjects: {
-        backgroundColor: '#ede9fe',
-        color: '#7c3aed'
-    },
-    statIconTasks: {
-        backgroundColor: '#dbeafe',
-        color: '#1d4ed8'
-    },
-    statIconProgress: {
-        backgroundColor: '#dcfce7',
-        color: '#16a34a'
-    },
-    statIconPoints: {
-        backgroundColor: '#fef3c7',
-        color: '#d97706'
+        fontSize: '32px'
     },
     statContent: {
         flex: 1
     },
-    statTitle: {
+    statLabel: {
         fontSize: '14px',
-        color: '#6b7280',
-        margin: '0 0 8px 0',
-        fontWeight: '500'
+        color: '#666',
+        margin: '0 0 5px 0'
     },
     statValue: {
-        fontSize: '24px',
+        fontSize: '28px',
         fontWeight: '700',
-        color: '#111827',
-        margin: '0 0 4px 0'
+        margin: '0',
+        color: '#333'
     },
-    statChange: {
-        fontSize: '12px',
-        color: '#6b7280',
-        margin: '0'
-    },
-    mainContent: {
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '0 20px 40px',
+    content: {
         display: 'grid',
-        gridTemplateColumns: '1fr',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
         gap: '30px'
     },
-    projectsSection: {
+    section: {
         backgroundColor: 'white',
+        padding: '25px',
         borderRadius: '12px',
-        padding: '24px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-    },
-    actionsSection: {
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-    },
-    sectionHeader: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px'
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
     },
     sectionTitle: {
         fontSize: '18px',
         fontWeight: '600',
-        color: '#111827',
-        margin: '0'
+        margin: '0 0 20px 0',
+        color: '#333'
     },
-    newProjectButton: {
-        padding: '10px 20px',
-        backgroundColor: '#7c3aed',
-        color: 'white',
-        border: 'none',
-        borderRadius: '8px',
-        fontSize: '14px',
-        fontWeight: '600',
-        cursor: 'pointer',
+    projectsList: {
         display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        transition: 'background-color 0.2s'
-    },
-    plusIcon: {
-        width: '16px',
-        height: '16px'
-    },
-    projectsGrid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-        gap: '20px'
+        flexDirection: 'column',
+        gap: '15px'
     },
     projectCard: {
-        backgroundColor: '#f9fafb',
-        borderRadius: '12px',
-        padding: '20px',
-        border: '1px solid #e5e7eb',
-        transition: 'all 0.2s'
+        border: '1px solid #eaeaea',
+        borderRadius: '10px',
+        padding: '20px'
     },
     projectHeader: {
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: '20px'
+        alignItems: 'center',
+        marginBottom: '15px'
     },
-    projectTitle: {
+    projectName: {
+        margin: '0',
         fontSize: '16px',
         fontWeight: '600',
-        color: '#111827',
-        margin: '0'
+        color: '#333'
     },
     projectDeadline: {
         fontSize: '12px',
@@ -619,112 +337,135 @@ const userStyles = {
         padding: '4px 8px',
         borderRadius: '6px'
     },
-    progressContainer: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        marginBottom: '20px'
-    },
     progressBar: {
-        flex: 1,
-        height: '8px',
-        backgroundColor: '#e5e7eb',
-        borderRadius: '4px',
-        overflow: 'hidden'
+        height: '6px',
+        backgroundColor: '#eaeaea',
+        borderRadius: '3px',
+        overflow: 'hidden',
+        marginBottom: '8px'
     },
     progressFill: {
         height: '100%',
-        borderRadius: '4px',
-        transition: 'width 0.3s ease'
+        backgroundColor: '#7c3aed',
+        borderRadius: '3px'
     },
-    progressText: {
-        fontSize: '14px',
-        fontWeight: '600',
-        color: '#374151',
-        minWidth: '40px'
+    progressLabel: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: '12px',
+        color: '#666',
+        marginBottom: '15px'
     },
     projectActions: {
         display: 'flex',
-        gap: '12px'
+        gap: '10px'
     },
-    projectButton: {
+    smallBtn: {
         flex: 1,
-        padding: '10px',
-        backgroundColor: 'white',
-        border: '1px solid #d1d5db',
-        borderRadius: '8px',
-        fontSize: '14px',
-        fontWeight: '500',
-        color: '#374151',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        transition: 'all 0.2s'
+        padding: '8px',
+        backgroundColor: '#f8f9fa',
+        border: '1px solid #eaeaea',
+        borderRadius: '6px',
+        fontSize: '12px',
+        cursor: 'pointer'
     },
     actionsGrid: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '16px'
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '15px',
+        marginBottom: '25px'
     },
-    actionButton: {
+    actionBtn: {
         padding: '20px',
-        backgroundColor: '#f9fafb',
-        border: '2px solid #e5e7eb',
-        borderRadius: '12px',
+        backgroundColor: '#f8f9fa',
+        border: '1px solid #eaeaea',
+        borderRadius: '10px',
         fontSize: '14px',
-        fontWeight: '600',
-        color: '#374151',
+        fontWeight: '500',
+        color: '#333',
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '12px',
+        gap: '10px',
         transition: 'all 0.2s'
+    },
+    actionIcon: {
+        fontSize: '24px'
+    },
+    userInfoCard: {
+        backgroundColor: '#f8f9fa',
+        borderRadius: '10px',
+        padding: '20px',
+        border: '1px solid #eaeaea'
+    },
+    infoTitle: {
+        fontSize: '16px',
+        fontWeight: '600',
+        margin: '0 0 15px 0',
+        color: '#333'
+    },
+    infoRow: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        padding: '8px 0',
+        borderBottom: '1px solid #eee'
+    },
+    statusActive: {
+        color: '#10b981',
+        fontWeight: '600'
     }
 };
 
-// Add animation for UserPage spinner
 if (typeof document !== 'undefined') {
-    const userStyle = document.createElement('style');
-    userStyle.innerHTML = `
+    const style = document.createElement('style');
+    style.innerHTML = `
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
         
-        .user-stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .spinner {
+            animation: spin 1s linear infinite;
         }
         
-        .new-project-button:hover {
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .auth-button:hover {
             background-color: #6d28d9;
         }
         
+        .logout-btn:hover {
+            background-color: #ff4444;
+            color: white;
+        }
+        
+        .action-btn:hover {
+            background-color: #7c3aed;
+            color: white;
+            border-color: #7c3aed;
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .small-btn:hover {
+            background-color: #7c3aed;
+            color: white;
+            border-color: #7c3aed;
+        }
+        
         .project-card:hover {
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border-color: #c7d2fe;
-        }
-        
-        .user-action-button:hover {
-            background-color: #f0f9ff;
-            border-color: #2563eb;
-            color: #2563eb;
-        }
-        
-        .user-logout-button:hover {
-            background-color: #dc2626;
-        }
-        
-        .project-button:hover {
-            background-color: #f3f4f6;
-            border-color: #2563eb;
-            color: #2563eb;
+            border-color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
         }
     `;
-    document.head.appendChild(userStyle);
+    document.head.appendChild(style);
 }
 
 export default UserPage;
