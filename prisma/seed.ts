@@ -10,6 +10,7 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({
   adapter,
 });
+
 async function main() {
   const hashedPassword = await bcrypt.hash("admin123", 10);
  

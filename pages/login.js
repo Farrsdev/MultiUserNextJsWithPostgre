@@ -13,7 +13,7 @@ function LoginPage() {
     const [emailError, setEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
     const { data: session, status } = useSession();
-const [isRedirecting, setIsRedirecting] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     const router = useRouter();
 
@@ -301,6 +301,7 @@ const styles = {
         height: "3rem",
         border: "4px solid #e5e7eb",
         borderTop: "4px solid #2563eb",
+
         borderRadius: "50%",
         animation: "spin 1s linear infinite",
         margin: "0 auto",

@@ -43,3 +43,12 @@ model Session {
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model Product {
+  id String @id @default(cuid())
+  name String
+  description String
+  price Int
+  stock Int
+  createdAt DateTime @default(now())
+}
