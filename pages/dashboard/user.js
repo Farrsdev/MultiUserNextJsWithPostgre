@@ -58,7 +58,7 @@ export default function UserPage({ products = [] }) {
 
     // Filter dan sort produk
     const filteredProducts = products
-        .filter(product => 
+        .filter(product =>
             product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             rupiah.format(product.price).includes(searchTerm)
         )
@@ -152,8 +152,8 @@ export default function UserPage({ products = [] }) {
                                 style={styles.searchInput}
                             />
                         </div>
-                        <select 
-                            value={sortBy} 
+                        <select
+                            value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                             style={styles.sortSelect}
                         >
@@ -187,11 +187,18 @@ export default function UserPage({ products = [] }) {
                             </thead>
                             <tbody>
                                 {filteredProducts.map((product, index) => (
-                                    <tr key={product.id} style={index % 2 === 0 ? styles.tableRow : {...styles.tableRow, backgroundColor: '#f9fafb'}}>
+                                    <tr key={product.id} style={index % 2 === 0 ? styles.tableRow : { ...styles.tableRow, backgroundColor: '#f9fafb' }}>
                                         <td style={styles.tableCell}>{index + 1}</td>
                                         <td style={styles.tableCell}>
-                                            <div style={styles.productInfo}>
-                                                <span style={styles.productName}>{product.name}</span>
+                                            <div style={styles.productInfoRow}>
+                                                {product.imageUrl ? (
+                                                    <img src={product.imageUrl} alt={product.name} style={styles.thumb} />
+                                                ) : (
+                                                    <div style={styles.productAvatarSmall}>{product.name.charAt(0)}</div>
+                                                )}
+                                                <div style={styles.productInfo}>
+                                                    <span style={styles.productName}>{product.name}</span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td style={styles.tableCell}>
@@ -213,7 +220,7 @@ export default function UserPage({ products = [] }) {
                                             </div>
                                         </td>
                                         <td style={styles.tableCell}>
-                                            <button 
+                                            <button
                                                 onClick={() => handleAddToCart(product)}
                                                 style={styles.cartBtn}
                                             >
@@ -447,6 +454,30 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         gap: '4px'
+    },
+    productInfoRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+    },
+    productAvatarSmall: {
+        width: '44px',
+        height: '44px',
+        borderRadius: '8px',
+        backgroundColor: '#4f46e5',
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '16px',
+        fontWeight: '600'
+    },
+    thumb: {
+        width: '56px',
+        height: '44px',
+        objectFit: 'cover',
+        borderRadius: '8px',
+        border: '1px solid #e5e7eb'
     },
     productName: {
         fontWeight: '500',

@@ -72,7 +72,7 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
             if (!res.ok) throw new Error("Gagal menghapus produk");
 
             setProducts((prev) => prev.filter((p) => p.id !== id));
-            
+
             // Show success message
             alert("Produk berhasil dihapus!");
         } catch (err) {
@@ -106,7 +106,7 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                 return sortConfig.direction === 'asc' ? a.price - b.price : b.price - a.price;
             }
             if (sortConfig.key === 'name') {
-                return sortConfig.direction === 'asc' 
+                return sortConfig.direction === 'asc'
                     ? a.name.localeCompare(b.name)
                     : b.name.localeCompare(a.name);
             }
@@ -114,7 +114,7 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                 return sortConfig.direction === 'asc' ? a.stock - b.stock : b.stock - a.stock;
             }
             if (sortConfig.key === 'createdAt') {
-                return sortConfig.direction === 'asc' 
+                return sortConfig.direction === 'asc'
                     ? new Date(a.createdAt) - new Date(b.createdAt)
                     : new Date(b.createdAt) - new Date(a.createdAt);
             }
@@ -136,8 +136,8 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                 <div style={styles.headerLeft}>
                     <div style={styles.userProfile}>
                         <div style={styles.avatar}>
-                            {session?.user?.name?.charAt(0)?.toUpperCase() || 
-                             session?.user?.email?.charAt(0)?.toUpperCase() || "A"}
+                            {session?.user?.name?.charAt(0)?.toUpperCase() ||
+                                session?.user?.email?.charAt(0)?.toUpperCase() || "A"}
                         </div>
                         <div>
                             <h1 style={styles.title}>
@@ -151,8 +151,8 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                     </div>
                 </div>
                 <div style={styles.headerActions}>
-                    <button 
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         style={styles.logoutBtn}
                         disabled={loading}
                     >
@@ -165,7 +165,7 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
             {/* Stats Overview */}
             <div style={styles.statsGrid}>
                 <div style={styles.statCard}>
-                    <div style={{...styles.statIcon, backgroundColor: '#e3f2fd'}}>
+                    <div style={{ ...styles.statIcon, backgroundColor: '#e3f2fd' }}>
                         📦
                     </div>
                     <div>
@@ -174,7 +174,7 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                     </div>
                 </div>
                 <div style={styles.statCard}>
-                    <div style={{...styles.statIcon, backgroundColor: '#e8f5e9'}}>
+                    <div style={{ ...styles.statIcon, backgroundColor: '#e8f5e9' }}>
                         💰
                     </div>
                     <div>
@@ -183,7 +183,7 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                     </div>
                 </div>
                 <div style={styles.statCard}>
-                    <div style={{...styles.statIcon, backgroundColor: '#fff3e0'}}>
+                    <div style={{ ...styles.statIcon, backgroundColor: '#fff3e0' }}>
                         📊
                     </div>
                     <div>
@@ -192,7 +192,7 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                     </div>
                 </div>
                 <div style={styles.statCard}>
-                    <div style={{...styles.statIcon, backgroundColor: '#ffebee'}}>
+                    <div style={{ ...styles.statIcon, backgroundColor: '#ffebee' }}>
                         ⚠️
                     </div>
                     <div>
@@ -204,14 +204,14 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
 
             {/* Quick Actions */}
             <div style={styles.quickActions}>
-                <button 
+                <button
                     onClick={() => router.push('/dashboard/products/create')}
                     style={styles.primaryAction}
                 >
                     <span style={styles.actionIcon}>➕</span>
                     Tambah Produk Baru
                 </button>
-        
+
             </div>
 
             {/* Main Content */}
@@ -243,12 +243,12 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                                 {searchTerm ? "Produk tidak ditemukan" : "Belum ada produk"}
                             </h3>
                             <p style={styles.emptyText}>
-                                {searchTerm 
+                                {searchTerm
                                     ? `Tidak ada hasil untuk "${searchTerm}"`
                                     : "Mulai dengan menambahkan produk pertama Anda"}
                             </p>
                             {!searchTerm && (
-                                <button 
+                                <button
                                     onClick={() => router.push('/dashboard/products/create')}
                                     style={styles.emptyAction}
                                 >
@@ -260,6 +260,9 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                         <table style={styles.table}>
                             <thead>
                                 <tr style={styles.tableHeaderRow}>
+                                    <th style={styles.tableHeader}>
+                                        No
+                                    </th>
                                     <th style={styles.tableHeader} onClick={() => handleSort('name')}>
                                         Nama Produk {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                                     </th>
@@ -280,9 +283,24 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                                     <tr key={product.id} style={styles.tableRow}>
                                         <td style={styles.tableCell}>
                                             <div style={styles.productCell}>
-                                                <div style={styles.productAvatar}>
-                                                    {product.name.charAt(0).toUpperCase()}
+                                                <div style={styles.productName}>
+                                                    {index + 1}
                                                 </div>
+                                            </div>
+                                        </td>
+                                        <td style={styles.tableCell}>
+                                            <div style={styles.productCell}>
+                                                {product.image ? (
+                                                    <img
+                                                        src={`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}${product.image}`}
+                                                        alt={product.name}
+                                                        style={styles.productImage}
+                                                    />
+                                                ) : (
+                                                    <div style={styles.productAvatar}>
+                                                        {product.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
                                                 <div>
                                                     <div style={styles.productName}>{product.name}</div>
                                                     <div style={styles.productDescription}>
@@ -301,10 +319,10 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                                             <div style={styles.stockCell}>
                                                 <span style={{
                                                     ...styles.stockBadge,
-                                                    backgroundColor: product.stock > 10 ? '#d1fae5' : 
-                                                                    product.stock > 0 ? '#fef3c7' : '#fee2e2',
-                                                    color: product.stock > 10 ? '#065f46' : 
-                                                          product.stock > 0 ? '#92400e' : '#991b1b'
+                                                    backgroundColor: product.stock > 10 ? '#d1fae5' :
+                                                        product.stock > 0 ? '#fef3c7' : '#fee2e2',
+                                                    color: product.stock > 10 ? '#065f46' :
+                                                        product.stock > 0 ? '#92400e' : '#991b1b'
                                                 }}>
                                                     {product.stock > 0 ? `${product.stock} unit` : 'Habis'}
                                                 </span>
@@ -323,14 +341,14 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                                         </td>
                                         <td style={styles.tableCell}>
                                             <div style={styles.actionButtons}>
-                                                <button 
+                                                <button
                                                     onClick={() => handleEdit(product.id)}
                                                     style={styles.editBtn}
                                                     title="Edit produk"
                                                 >
                                                     ✏️ Edit
                                                 </button>
-                                                <button 
+                                                <button
                                                     onClick={() => handleDelete(product.id)}
                                                     style={styles.deleteBtn}
                                                     disabled={loading}
@@ -760,7 +778,15 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '4px'
-    }
+    },
+    productImage: {
+        width: '40px',
+        height: '40px',
+        borderRadius: '8px',
+        objectFit: 'cover',
+        marginRight: '12px',
+        border: '1px solid #e5e7eb',
+    },
 };
 
 // Tambahkan hover effects dan animations

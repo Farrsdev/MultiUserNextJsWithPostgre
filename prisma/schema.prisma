@@ -50,5 +50,7 @@ model Product {
   description String
   price Int
   stock Int
+  image String?
   createdAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
 }

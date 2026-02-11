@@ -16,7 +16,14 @@ export default async function handler(req, res) {
             const products = await prisma.product.findMany({
                 orderBy: { createdAt: "desc" },
             });
-            return res.status(200).json(products);
+
+            // Add a full URL `imageUrl` for each product when `image` path exists
+            const productsWithImage = products.map((p) => ({
+                ...p,
+                imageUrl: p.image ? `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}${p.image}` : null,
+            }));
+
+            return res.status(200).json(productsWithImage);
         } catch (err) {
             console.error("Error fetching products:", err);
             return res.status(500).json({ error: "Gagal ambil data" });
