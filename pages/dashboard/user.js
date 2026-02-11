@@ -48,6 +48,7 @@ export default function UserPage({ products = [] }) {
     const { data: session } = useSession();
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState("newest");
+    const [loading, setLoading] = useState(false);
 
     const handleLogout = async () => {
         await signOut({
@@ -76,9 +77,25 @@ export default function UserPage({ products = [] }) {
             }
         });
 
-    const handleAddToCart = (product) => {
-        // Implementasi cart functionality
-        alert(`Added ${product.name} to cart!`);
+    const handleAddToCart = async (product) => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: product.id, quantity: 1 }),
+            });
+            if (res.ok) {
+                alert(`${product.name} ditambahkan ke cart!`);
+            } else {
+                alert('Gagal tambah ke cart');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error menambahkan ke cart');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -102,6 +119,8 @@ export default function UserPage({ products = [] }) {
                     <div style={styles.userRole}>
                         <span style={styles.roleBadge}>User Account</span>
                     </div>
+                    <a href="/dashboard/orders" style={styles.navLink}>📜 Orders</a>
+                    <a href="/dashboard/cart" style={styles.navLink}>🛒 Cart</a>
                     <button onClick={handleLogout} style={styles.logoutBtn}>
                         <span style={styles.logoutIcon}>↩</span> Logout
                     </button>
@@ -560,6 +579,14 @@ const styles = {
         color: '#9ca3af',
         fontSize: '13px',
         margin: '0'
+    },
+    navLink: {
+        color: '#4f46e5',
+        textDecoration: 'none',
+        fontWeight: '500',
+        fontSize: '14px',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease'
     }
 };
 
