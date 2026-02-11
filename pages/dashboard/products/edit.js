@@ -1,403 +1,383 @@
 import { getServerSession } from "next-auth/next";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { authOptions } from "../../api/auth/[...nextauth]";
 
 export async function getServerSideProps(context) {
-    const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getServerSession(context.req, context.res, authOptions);
+  if (!session || session.user.role !== "admin") {
+    return { redirect: { destination: "/login", permanent: false } };
+  }
 
-    if (!session || session.user.role !== "admin") {
-        return {
-            redirect: {
-                destination: "/login",
-                permanent: false,
-            },
-        };
+  const { id } = context.query;
+  let product = null;
+
+  try {
+    const protocol = context.req.headers['x-forwarded-proto'] || 'http';
+    const host = context.req.headers.host;
+    const res = await fetch(`${protocol}://${host}/api/products/${id}`, {
+      headers: { cookie: context.req.headers.cookie || '' },
+    });
+    
+    if (res.ok) {
+      product = await res.json();
     }
+  } catch (err) {
+    console.error("Gagal ambil produk:", err);
+  }
 
-    const { id } = context.query;
+  if (!product) {
+    return { notFound: true };
+  }
 
-    // Fetch product data
-    let product = null;
-    try {
-        const protocol = context.req.headers['x-forwarded-proto'] || 'http';
-        const host = context.req.headers['x-forwarded-host'] || context.req.headers.host;
-        const baseUrl = `${protocol}://${host}`;
-
-        const res = await fetch(`${baseUrl}/api/products/${id}`, {
-            headers: {
-                cookie: context.req.headers.cookie || '',
-            },
-        });
-
-        if (res.ok) {
-            product = await res.json();
-        }
-    } catch (err) {
-        console.error("Gagal ambil product:", err);
-    }
-
-    if (!product) {
-        return {
-            notFound: true,
-        };
-    }
-
-    return { props: { product } };
+  return { props: { product } };
 }
 
 export default function EditProduct({ product }) {
-    const router = useRouter();
-    const { data: session } = useSession();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
-    const [formData, setFormData] = useState({
-        name: product.name || "",
-        price: product.price || "",
-        description: product.description || "",
-        stock: product.stock || "",
-    });
+  const router = useRouter();
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [form, setForm] = useState({
+    name: product.name || "",
+    price: product.price || "",
+    description: product.description || "",
+    stock: product.stock || "",
+  });
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-        setError("");
-        setSuccess("");
-    };
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setError("");
+    setSuccess("");
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
-        setSuccess("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
-        try {
-            // Validasi
-            if (!formData.name.trim()) {
-                setError("Nama produk tidak boleh kosong");
-                setLoading(false);
-                return;
-            }
+    if (!form.name.trim() || !form.price || parseFloat(form.price) <= 0) {
+      setError(!form.name.trim() ? "Nama wajib diisi" : "Harga harus > 0");
+      setLoading(false);
+      return;
+    }
 
-            if (!formData.price || parseFloat(formData.price) <= 0) {
-                setError("Harga harus lebih dari 0");
-                setLoading(false);
-                return;
-            }
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          price: parseFloat(form.price),
+          description: form.description.trim(),
+          stock: parseInt(form.stock) || 0,
+        }),
+      });
 
-            const res = await fetch(`/api/products/${product.id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                    name: formData.name.trim(),
-                    price: parseFloat(formData.price),
-                    description: formData.description.trim(),
-                    stock: parseInt(formData.stock) || 0,
-                }),
-            });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal update produk");
+      
+      setSuccess("Produk berhasil diupdate! Mengalihkan...");
+      setTimeout(() => router.push("/dashboard/admin"), 1500);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            const data = await res.json();
+  return (
+    <div style={styles.container}>
+      <header style={styles.header}>
+        <div>
+          <h1 style={styles.title}>Edit Produk</h1>
+          <div style={styles.breadcrumb}>
+            <span onClick={() => router.push("/dashboard/admin")} style={styles.link}>
+              Dashboard
+            </span> / 
+            <span style={styles.breadcrumbActive}> Edit Produk</span>
+          </div>
+        </div>
+        <div style={styles.avatar}>
+          {session?.user?.name?.charAt(0) || "A"}
+        </div>
+      </header>
 
-            if (!res.ok) {
-                setError(data.message || data.error || "Gagal update produk");
-                setLoading(false);
-                return;
-            }
+      <main style={styles.main}>
+        <div style={styles.preview}>
+          <h3>Pratinjau Produk</h3>
+          <div style={styles.previewInfo}>
+            <div><strong>Nama:</strong> {form.name || product.name}</div>
+            <div><strong>Harga:</strong> Rp {parseInt(form.price || product.price).toLocaleString()}</div>
+            <div><strong>Stok:</strong> {form.stock || product.stock} unit</div>
+          </div>
+        </div>
 
-            setSuccess("Produk berhasil diupdate!");
-            setTimeout(() => {
-                router.push("/dashboard/admin");
-            }, 1500);
-        } catch (err) {
-            console.error(err);
-            setError("Terjadi kesalahan saat update produk");
-            setLoading(false);
-        }
-    };
+        <div style={styles.card}>
+          <h2>Edit Informasi Produk</h2>
+          
+          {error && <div style={styles.error}>{error}</div>}
+          {success && <div style={styles.success}>{success}</div>}
 
-    return (
-        <div style={styles.container}>
-            {/* Header */}
-            <header style={styles.header}>
-                <h1 style={styles.title}>Edit Produk</h1>
-                <p style={styles.subtitle}>Update informasi produk</p>
-            </header>
-
-            {/* Main Content */}
-            <div style={styles.content}>
-                <div style={styles.formContainer}>
-                    {error && (
-                        <div style={styles.alertError}>
-                            <span style={{ marginRight: "10px" }}>⚠️</span>
-                            {error}
-                        </div>
-                    )}
-
-                    {success && (
-                        <div style={styles.alertSuccess}>
-                            <span style={{ marginRight: "10px" }}>✓</span>
-                            {success}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} style={styles.form}>
-                        {/* Nama Produk */}
-                        <div style={styles.formGroup}>
-                            <label style={styles.label}>Nama Produk *</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                placeholder="Masukkan nama produk"
-                                style={styles.input}
-                            />
-                        </div>
-
-                        {/* Harga */}
-                        <div style={styles.formGroup}>
-                            <label style={styles.label}>Harga (Rp) *</label>
-                            <input
-                                type="number"
-                                name="price"
-                                value={formData.price}
-                                onChange={handleChange}
-                                placeholder="Masukkan harga produk"
-                                min="1"
-                                step="1"
-                                style={styles.input}
-                            />
-                        </div>
-
-                        {/* Stock */}
-                        <div style={styles.formGroup}>
-                            <label style={styles.label}>Stock</label>
-                            <input
-                                type="number"
-                                name="stock"
-                                value={formData.stock}
-                                onChange={handleChange}
-                                placeholder="Masukkan jumlah stock"
-                                min="0"
-                                style={styles.input}
-                            />
-                        </div>
-
-                        {/* Deskripsi */}
-                        <div style={styles.formGroup}>
-                            <label style={styles.label}>Deskripsi</label>
-                            <textarea
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                placeholder="Masukkan deskripsi produk"
-                                rows="5"
-                                style={styles.textarea}
-                            />
-                        </div>
-
-                        {/* Buttons */}
-                        <div style={styles.formActions}>
-                            <button
-                                type="button"
-                                onClick={() => router.push("/dashboard/admin")}
-                                style={styles.btnCancel}
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                style={{
-                                    ...styles.btnSubmit,
-                                    opacity: loading ? 0.6 : 1,
-                                    cursor: loading ? "not-allowed" : "pointer",
-                                }}
-                            >
-                                {loading ? "Menyimpan..." : "Update Produk"}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+          <form onSubmit={handleSubmit} style={styles.form}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Nama Produk *</label>
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Nama produk"
+                style={styles.input}
+                required
+              />
             </div>
 
-            {/* Footer */}
-            <footer style={styles.footer}>
-                <p>&copy; 2025 Admin Dashboard. All rights reserved.</p>
-            </footer>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Harga *</label>
+              <input
+                type="number"
+                name="price"
+                value={form.price}
+                onChange={handleChange}
+                placeholder="Harga"
+                min="1"
+                style={styles.input}
+                required
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Stok</label>
+              <input
+                type="number"
+                name="stock"
+                value={form.stock}
+                onChange={handleChange}
+                placeholder="Stok"
+                min="0"
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Deskripsi</label>
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Deskripsi produk"
+                rows="4"
+                style={styles.textarea}
+              />
+              <div style={styles.charCount}>{form.description.length}/500</div>
+            </div>
+
+            <div style={styles.metadata}>
+              <div><strong>ID:</strong> {product.id}</div>
+              <div><strong>Dibuat:</strong> {new Date(product.createdAt).toLocaleDateString('id-ID')}</div>
+              <div><strong>Diupdate:</strong> {new Date(product.updatedAt || product.createdAt).toLocaleDateString('id-ID')}</div>
+            </div>
+
+            <div style={styles.actions}>
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard/admin")}
+                style={styles.btnSecondary}
+              >
+                Kembali
+              </button>
+              <div style={styles.rightActions}>
+                <button
+                  type="button"
+                  onClick={() => setForm({
+                    name: product.name || "",
+                    price: product.price || "",
+                    description: product.description || "",
+                    stock: product.stock || "",
+                  })}
+                  style={styles.btnReset}
+                >
+                  Reset
+                </button>
+                <button type="submit" disabled={loading} style={styles.btnPrimary}>
+                  {loading ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
-    );
+      </main>
+
+      <footer style={styles.footer}>
+        <p>&copy; {new Date().getFullYear()} Admin Dashboard • ID Produk: {product.id}</p>
+      </footer>
+    </div>
+  );
 }
 
 const styles = {
-    container: {
-        minHeight: "100vh",
-        backgroundColor: "#f8f9fa",
-        display: "flex",
-        flexDirection: "column",
-    },
-    header: {
-        backgroundColor: "#fff",
-        padding: "20px",
-        borderBottom: "1px solid #eaeaea",
-    },
-    title: {
-        fontSize: "28px",
-        fontWeight: "700",
-        margin: "0",
-        color: "#333",
-    },
-    subtitle: {
-        color: "#666",
-        margin: "5px 0 0 0",
-        fontSize: "14px",
-    },
-    content: {
-        flex: 1,
-        padding: "20px",
-    },
-    formContainer: {
-        backgroundColor: "#fff",
-        padding: "30px",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-        maxWidth: "600px",
-        margin: "0 auto",
-    },
-    alertError: {
-        backgroundColor: "#fee2e2",
-        color: "#dc2626",
-        padding: "12px 16px",
-        borderRadius: "8px",
-        marginBottom: "20px",
-        display: "flex",
-        alignItems: "center",
-        fontSize: "14px",
-        border: "1px solid #fecaca",
-    },
-    alertSuccess: {
-        backgroundColor: "#dcfce7",
-        color: "#16a34a",
-        padding: "12px 16px",
-        borderRadius: "8px",
-        marginBottom: "20px",
-        display: "flex",
-        alignItems: "center",
-        fontSize: "14px",
-        border: "1px solid #bbf7d0",
-    },
-    form: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "20px",
-    },
-    formGroup: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-    },
-    label: {
-        fontSize: "14px",
-        fontWeight: "600",
-        color: "#333",
-    },
-    input: {
-        padding: "10px 12px",
-        border: "1px solid #ddd",
-        borderRadius: "6px",
-        fontSize: "14px",
-        fontFamily: "inherit",
-        boxSizing: "border-box",
-    },
-    textarea: {
-        padding: "10px 12px",
-        border: "1px solid #ddd",
-        borderRadius: "6px",
-        fontSize: "14px",
-        fontFamily: "inherit",
-        boxSizing: "border-box",
-        resize: "vertical",
-    },
-    formActions: {
-        display: "flex",
-        gap: "12px",
-        justifyContent: "flex-end",
-        marginTop: "20px",
-        paddingTop: "20px",
-        borderTop: "1px solid #eaeaea",
-    },
-    btnCancel: {
-        padding: "10px 24px",
-        backgroundColor: "#f3f4f6",
-        color: "#333",
-        border: "1px solid #ddd",
-        borderRadius: "6px",
-        fontSize: "14px",
-        fontWeight: "600",
-        cursor: "pointer",
-        transition: "all 0.2s",
-    },
-    btnSubmit: {
-        padding: "10px 24px",
-        backgroundColor: "#0070f3",
-        color: "#fff",
-        border: "none",
-        borderRadius: "6px",
-        fontSize: "14px",
-        fontWeight: "600",
-        cursor: "pointer",
-        transition: "all 0.2s",
-    },
-    footer: {
-        backgroundColor: "#fff",
-        borderTop: "1px solid #eaeaea",
-        padding: "20px",
-        textAlign: "center",
-        color: "#666",
-        fontSize: "14px",
-    },
+  container: {
+    minHeight: "100vh",
+    backgroundColor: "#f5f5f5",
+    fontFamily: "sans-serif",
+  },
+  header: {
+    backgroundColor: "white",
+    padding: "20px 30px",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  title: {
+    margin: "0 0 5px 0",
+    fontSize: "24px",
+    color: "#333",
+  },
+  breadcrumb: {
+    fontSize: "14px",
+    color: "#666",
+  },
+  link: {
+    cursor: "pointer",
+    color: "#0066cc",
+  },
+  breadcrumbActive: {
+    color: "#f59e0b",
+    fontWeight: "bold",
+  },
+  avatar: {
+    width: "40px",
+    height: "40px",
+    borderRadius: "50%",
+    backgroundColor: "#4f46e5",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold",
+  },
+  main: {
+    padding: "30px",
+    maxWidth: "800px",
+    margin: "0 auto",
+  },
+  preview: {
+    backgroundColor: "white",
+    borderRadius: "8px",
+    padding: "20px",
+    marginBottom: "20px",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  },
+  previewInfo: {
+    marginTop: "10px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
+  card: {
+    backgroundColor: "white",
+    borderRadius: "8px",
+    padding: "25px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+  },
+  error: {
+    backgroundColor: "#ffe6e6",
+    color: "#cc0000",
+    padding: "10px",
+    borderRadius: "5px",
+    marginBottom: "20px",
+  },
+  success: {
+    backgroundColor: "#e6ffe6",
+    color: "#009900",
+    padding: "10px",
+    borderRadius: "5px",
+    marginBottom: "20px",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+  },
+  formGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "5px",
+  },
+  label: {
+    fontWeight: "bold",
+    fontSize: "14px",
+  },
+  input: {
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "5px",
+    fontSize: "16px",
+  },
+  textarea: {
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "5px",
+    fontSize: "16px",
+    resize: "vertical",
+  },
+  charCount: {
+    fontSize: "12px",
+    color: "#999",
+    textAlign: "right",
+  },
+  metadata: {
+    display: "flex",
+    gap: "20px",
+    padding: "15px",
+    backgroundColor: "#f9f9f9",
+    borderRadius: "5px",
+    fontSize: "14px",
+    color: "#666",
+  },
+  actions: {
+    display: "flex",
+    justifyContent: "space-between",
+    paddingTop: "20px",
+    borderTop: "1px solid #eee",
+  },
+  rightActions: {
+    display: "flex",
+    gap: "10px",
+  },
+  btnSecondary: {
+    padding: "10px 20px",
+    backgroundColor: "#f0f0f0",
+    border: "1px solid #ddd",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  btnReset: {
+    padding: "10px 20px",
+    backgroundColor: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  btnPrimary: {
+    padding: "10px 20px",
+    backgroundColor: "#f59e0b",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+  },
+  footer: {
+    textAlign: "center",
+    padding: "20px",
+    color: "#666",
+    fontSize: "14px",
+    borderTop: "1px solid #ddd",
+    backgroundColor: "white",
+  },
 };
-
-if (typeof document !== "undefined") {
-    const style = document.createElement("style");
-    style.innerHTML = `
-        input:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #0070f3;
-            box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
-        }
-
-        input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        button[type="button"]:hover {
-            background-color: #e5e7eb;
-        }
-
-        button[type="submit"]:hover:not(:disabled) {
-            background-color: #0058cc;
-        }
-    `;
-    document.head.appendChild(style);
-}
