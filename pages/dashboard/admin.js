@@ -152,11 +152,29 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                 </div>
                 <div style={styles.headerActions}>
                     <button
-                        onClick={handleLogout}
-                        style={styles.logoutBtn}
-                        disabled={loading}
+                        onClick={() => router.push('/dashboard/admin/orders')}
+                        style={{
+                            ...styles.secondaryBtn,
+                            backgroundColor: router.pathname.includes('/admin/orders') ? '#eef2ff' : 'white',
+                            color: router.pathname.includes('/admin/orders') ? '#4f46e5' : '#4b5563'
+                        }}
                     >
-                        <span style={styles.logoutIcon}>🚪</span>
+                        <span>📋</span>
+                        Orders
+                    </button>
+                    <button
+                        onClick={() => router.push('/dashboard/admin')}
+                        style={{
+                            ...styles.secondaryBtn,
+                            backgroundColor: !router.pathname.includes('/admin/orders') ? '#eef2ff' : 'white',
+                            color: !router.pathname.includes('/admin/orders') ? '#4f46e5' : '#4b5563'
+                        }}
+                    >
+                        <span>📦</span>
+                        Products
+                    </button>
+                    <button onClick={handleLogout} style={styles.logoutBtn}>
+                        <span>🚪</span>
                         Logout
                     </button>
                 </div>
@@ -457,6 +475,20 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '15px'
+    },
+    secondaryBtn: {
+        padding: '10px 20px',
+        backgroundColor: 'white',
+        color: '#4b5563',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '500',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        transition: 'all 0.3s ease'
     },
     logoutBtn: {
         padding: '10px 20px',

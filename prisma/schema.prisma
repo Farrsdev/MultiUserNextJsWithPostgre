@@ -20,6 +20,7 @@ model User {
   sessions      Session[]
   orders        Order[]
   cartItems     CartItem[]
+  payments      Payment[]    // <-- TAMBAHKAN INI
 }
 
 model Account {
@@ -47,16 +48,17 @@ model Session {
 }
 
 model Product {
-  id String @id @default(cuid())
-  name String
+  id          String   @id @default(cuid())
+  name        String
   description String
-  price Int
-  stock Int
-  image String?
-  createdAt DateTime @default(now())
+  price       Int
+  stock       Int
+  image       String?
+  createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt @default(now())
-  orderItems OrderItem[]
-  cartItems  CartItem[]
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
+  paymentItems PaymentItem[]    // <-- TAMBAHKAN INI
 }
 
 model Order {
@@ -64,8 +66,41 @@ model Order {
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   total     Int
+  status    String      @default("pending")
+  paymentId String?     @unique
+  payment   Payment?    @relation(fields: [paymentId], references: [id])
   items     OrderItem[]
   createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  status    String   @default("pending")
+  method    String?
+  orderId   String   @unique
+  paidAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  items     PaymentItem[]
+  order     Order?
+}
+
+model PaymentItem {
+  id          String   @id @default(cuid())
+  paymentId   String
+  payment     Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  productName String
+  quantity    Int
+  price       Int
+  createdAt   DateTime @default(now())
 }
 
 model OrderItem {

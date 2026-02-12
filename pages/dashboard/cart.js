@@ -36,10 +36,10 @@ export default function CartPage() {
         setRemovingId(productId);
         setLoading(true);
         try {
-            await fetch('/api/cart', { 
-                method: 'DELETE', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ productId }) 
+            await fetch('/api/cart', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId })
             });
             await fetchCart();
         } catch (error) {
@@ -53,13 +53,13 @@ export default function CartPage() {
 
     const handleUpdateQuantity = async (productId, newQuantity) => {
         if (newQuantity < 1) return handleRemove(productId);
-        
+
         setLoading(true);
         try {
-            await fetch('/api/cart', { 
-                method: 'PUT', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ productId, quantity: newQuantity }) 
+            await fetch('/api/cart', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, quantity: newQuantity })
             });
             await fetchCart();
         } catch (error) {
@@ -75,8 +75,8 @@ export default function CartPage() {
         try {
             const res = await fetch('/api/checkout', { method: 'POST' });
             if (res.ok) {
-                alert('✅ Checkout berhasil! Pesanan Anda sedang diproses.');
-                router.push('/dashboard/orders');
+                const data = await res.json();
+                router.push(`/dashboard/checkout?paymentId=${data.paymentId}`);
             } else {
                 const data = await res.json();
                 alert(data?.error || 'Checkout gagal, silakan coba lagi');
@@ -163,16 +163,16 @@ export default function CartPage() {
                                 <h2 style={styles.cartTitle}>Cart Items ({itemCount})</h2>
                                 <span style={styles.clearHint}>Swipe to remove</span>
                             </div>
-                            
+
                             {items.map((item) => (
                                 <div key={item.id} style={styles.cartItem}>
                                     {/* Product Image */}
                                     <div style={styles.itemImageContainer}>
                                         {item.product?.imageUrl ? (
-                                            <img 
-                                                src={item.product.imageUrl} 
-                                                alt={item.product.name} 
-                                                style={styles.itemImage} 
+                                            <img
+                                                src={item.product.imageUrl}
+                                                alt={item.product.name}
+                                                style={styles.itemImage}
                                             />
                                         ) : (
                                             <div style={styles.itemImagePlaceholder}>
@@ -231,7 +231,7 @@ export default function CartPage() {
                         {/* Order Summary */}
                         <div style={styles.orderSummary}>
                             <h2 style={styles.summaryTitle}>Order Summary</h2>
-                            
+
                             <div style={styles.summaryContent}>
                                 <div style={styles.summaryRow}>
                                     <span>Subtotal</span>
@@ -252,9 +252,9 @@ export default function CartPage() {
                                         ✨ Add {rupiah.format(500000 - subtotal)} more for free shipping
                                     </div>
                                 )}
-                                
+
                                 <div style={styles.divider} />
-                                
+
                                 <div style={{ ...styles.summaryRow, ...styles.totalRow }}>
                                     <span>Total</span>
                                     <span style={styles.totalAmount}>{rupiah.format(total)}</span>

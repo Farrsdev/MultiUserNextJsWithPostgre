@@ -127,36 +127,7 @@ export default function UserPage({ products = [] }) {
                 </div>
             </header>
 
-            {/* Stats Cards */}
-            <div style={styles.statsContainer}>
-                <div style={styles.statCard}>
-                    <div style={styles.statIcon}>📦</div>
-                    <div>
-                        <h3 style={styles.statNumber}>{products.length}</h3>
-                        <p style={styles.statLabel}>Total Products</p>
-                    </div>
-                </div>
-                <div style={styles.statCard}>
-                    <div style={styles.statIcon}>💰</div>
-                    <div>
-                        <h3 style={styles.statNumber}>
-                            {rupiah.format(products.reduce((sum, p) => sum + p.price, 0))}
-                        </h3>
-                        <p style={styles.statLabel}>Total Value</p>
-                    </div>
-                </div>
-                <div style={styles.statCard}>
-                    <div style={styles.statIcon}>🆕</div>
-                    <div>
-                        <h3 style={styles.statNumber}>
-                            {new Date(Math.max(...products.map(p => new Date(p.createdAt)))).toLocaleDateString('id-ID')}
-                        </h3>
-                        <p style={styles.statLabel}>Last Added</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content */}
+            {/* Main Content - Only Products */}
             <main style={styles.mainContent}>
                 <div style={styles.contentHeader}>
                     <h2 style={styles.contentTitle}>Product Catalog</h2>
@@ -199,6 +170,7 @@ export default function UserPage({ products = [] }) {
                                 <tr>
                                     <th style={styles.tableHeader}>No</th>
                                     <th style={styles.tableHeader}>Product Name</th>
+                                    <th style={styles.tableHeader}>Stock</th>
                                     <th style={styles.tableHeader}>Price</th>
                                     <th style={styles.tableHeader}>Created Date</th>
                                     <th style={styles.tableHeader}>Actions</th>
@@ -219,6 +191,11 @@ export default function UserPage({ products = [] }) {
                                                     <span style={styles.productName}>{product.name}</span>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td style={styles.tableCell}>
+                                            <span style={styles.priceTag}>
+                                                {product.stock}
+                                            </span>
                                         </td>
                                         <td style={styles.tableCell}>
                                             <span style={styles.priceTag}>
@@ -350,43 +327,6 @@ const styles = {
     logoutIcon: {
         fontSize: '16px'
     },
-    statsContainer: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '20px',
-        marginBottom: '40px'
-    },
-    statCard: {
-        backgroundColor: 'white',
-        padding: '25px',
-        borderRadius: '12px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '20px',
-        transition: 'transform 0.3s ease'
-    },
-    statIcon: {
-        fontSize: '32px',
-        width: '60px',
-        height: '60px',
-        borderRadius: '12px',
-        backgroundColor: '#f3f4f6',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-    },
-    statNumber: {
-        fontSize: '24px',
-        fontWeight: '700',
-        margin: '0 0 5px 0',
-        color: '#1f2937'
-    },
-    statLabel: {
-        color: '#6b7280',
-        margin: '0',
-        fontSize: '14px'
-    },
     mainContent: {
         backgroundColor: 'white',
         borderRadius: '16px',
@@ -397,7 +337,9 @@ const styles = {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '30px'
+        marginBottom: '30px',
+        flexWrap: 'wrap',
+        gap: '15px'
     },
     contentTitle: {
         fontSize: '22px',
@@ -407,12 +349,16 @@ const styles = {
     },
     controls: {
         display: 'flex',
-        gap: '15px',
-        alignItems: 'center'
+        gap: '30px',
+        alignItems: 'center',
+        flexWrap: 'nowrap',
+        justifyContent: 'flex-start'
     },
     searchContainer: {
         position: 'relative',
-        width: '300px'
+        width: '250px',
+        flex: '0 0 auto',
+        marginRight: '20px'
     },
     searchIcon: {
         position: 'absolute',
@@ -436,7 +382,11 @@ const styles = {
         fontSize: '14px',
         backgroundColor: 'white',
         cursor: 'pointer',
-        minWidth: '160px'
+        minWidth: '170px',
+        position: 'relative',
+        zIndex: '10',
+        flex: '0 0 auto',
+        marginLeft: '40px'
     },
     tableContainer: {
         overflowX: 'auto',
@@ -607,11 +557,6 @@ if (typeof document !== 'undefined') {
         .cart-btn:hover {
             background-color: #059669 !important;
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
         
         .search-input:focus {
