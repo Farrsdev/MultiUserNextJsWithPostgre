@@ -152,26 +152,34 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                 </div>
                 <div style={styles.headerActions}>
                     <button
-                        onClick={() => router.push('/dashboard/admin/orders')}
-                        style={{
-                            ...styles.secondaryBtn,
-                            backgroundColor: router.pathname.includes('/admin/orders') ? '#eef2ff' : 'white',
-                            color: router.pathname.includes('/admin/orders') ? '#4f46e5' : '#4b5563'
-                        }}
-                    >
-                        <span>📋</span>
-                        Orders
-                    </button>
-                    <button
                         onClick={() => router.push('/dashboard/admin')}
                         style={{
-                            ...styles.secondaryBtn,
-                            backgroundColor: !router.pathname.includes('/admin/orders') ? '#eef2ff' : 'white',
-                            color: !router.pathname.includes('/admin/orders') ? '#4f46e5' : '#4b5563'
+                            ...styles.navButton,
+                            ...(router.pathname === '/dashboard/admin' ? styles.navButtonActive : {})
+                        }}
+                    >
+                        <span>📊</span>
+                        Dashboard
+                    </button>
+                    <button
+                        onClick={() => router.push('/dashboard/products')}
+                        style={{
+                            ...styles.navButton,
+                            ...(router.pathname.includes('/products') ? styles.navButtonActive : {})
                         }}
                     >
                         <span>📦</span>
                         Products
+                    </button>
+                    <button
+                        onClick={() => router.push('/dashboard/admin/orders')}
+                        style={{
+                            ...styles.navButton,
+                            ...(router.pathname.includes('/admin/orders') ? styles.navButtonActive : {})
+                        }}
+                    >
+                        <span>📋</span>
+                        Orders
                     </button>
                     <button onClick={handleLogout} style={styles.logoutBtn}>
                         <span>🚪</span>
@@ -180,209 +188,172 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
                 </div>
             </header>
 
-            {/* Stats Overview */}
-            <div style={styles.statsGrid}>
-                <div style={styles.statCard}>
-                    <div style={{ ...styles.statIcon, backgroundColor: '#e3f2fd' }}>
-                        📦
-                    </div>
-                    <div>
-                        <h3 style={styles.statNumber}>{stats.totalProducts}</h3>
-                        <p style={styles.statLabel}>Total Produk</p>
-                    </div>
-                </div>
-                <div style={styles.statCard}>
-                    <div style={{ ...styles.statIcon, backgroundColor: '#e8f5e9' }}>
-                        💰
-                    </div>
-                    <div>
-                        <h3 style={styles.statNumber}>{rupiah.format(stats.totalValue)}</h3>
-                        <p style={styles.statLabel}>Total Nilai</p>
-                    </div>
-                </div>
-                <div style={styles.statCard}>
-                    <div style={{ ...styles.statIcon, backgroundColor: '#fff3e0' }}>
-                        📊
-                    </div>
-                    <div>
-                        <h3 style={styles.statNumber}>{stats.totalStock}</h3>
-                        <p style={styles.statLabel}>Total Stok</p>
-                    </div>
-                </div>
-                <div style={styles.statCard}>
-                    <div style={{ ...styles.statIcon, backgroundColor: '#ffebee' }}>
-                        ⚠️
-                    </div>
-                    <div>
-                        <h3 style={styles.statNumber}>{stats.outOfStock}</h3>
-                        <p style={styles.statLabel}>Habis Stok</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div style={styles.quickActions}>
-                <button
-                    onClick={() => router.push('/dashboard/products/create')}
-                    style={styles.primaryAction}
-                >
-                    <span style={styles.actionIcon}>➕</span>
-                    Tambah Produk Baru
-                </button>
-
-            </div>
-
-            {/* Main Content */}
-            <main style={styles.mainContent}>
-                <div style={styles.contentHeader}>
-                    <h2 style={styles.contentTitle}>Manajemen Produk</h2>
-                    <div style={styles.controls}>
-                        <div style={styles.searchBox}>
-                            <span style={styles.searchIcon}>🔍</span>
-                            <input
-                                type="text"
-                                placeholder="Cari produk..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={styles.searchInput}
-                            />
+            {/* Main Content Area */}
+            <div style={styles.mainArea}>
+                {/* Stats Overview */}
+                <div style={styles.statsGrid}>
+                    <div style={styles.statCard}>
+                        <div style={{ ...styles.statIcon, backgroundColor: '#e3f2fd' }}>
+                            📦
                         </div>
-                        <div style={styles.filterBadge}>
-                            Menampilkan {filteredProducts.length} dari {products.length} produk
+                        <div>
+                            <h3 style={styles.statNumber}>{stats.totalProducts}</h3>
+                            <p style={styles.statLabel}>Total Produk</p>
+                        </div>
+                    </div>
+                    <div style={styles.statCard}>
+                        <div style={{ ...styles.statIcon, backgroundColor: '#e8f5e9' }}>
+                            💰
+                        </div>
+                        <div>
+                            <h3 style={styles.statNumber}>{rupiah.format(stats.totalValue)}</h3>
+                            <p style={styles.statLabel}>Total Nilai</p>
+                        </div>
+                    </div>
+                    <div style={styles.statCard}>
+                        <div style={{ ...styles.statIcon, backgroundColor: '#fff3e0' }}>
+                            📊
+                        </div>
+                        <div>
+                            <h3 style={styles.statNumber}>{stats.totalStock}</h3>
+                            <p style={styles.statLabel}>Total Stok</p>
+                        </div>
+                    </div>
+                    <div style={styles.statCard}>
+                        <div style={{ ...styles.statIcon, backgroundColor: '#ffebee' }}>
+                            ⚠️
+                        </div>
+                        <div>
+                            <h3 style={styles.statNumber}>{stats.outOfStock}</h3>
+                            <p style={styles.statLabel}>Habis Stok</p>
                         </div>
                     </div>
                 </div>
 
-                <div style={styles.tableWrapper}>
-                    {filteredProducts.length === 0 ? (
-                        <div style={styles.emptyState}>
-                            <div style={styles.emptyIcon}>📦</div>
-                            <h3 style={styles.emptyTitle}>
-                                {searchTerm ? "Produk tidak ditemukan" : "Belum ada produk"}
-                            </h3>
-                            <p style={styles.emptyText}>
-                                {searchTerm
-                                    ? `Tidak ada hasil untuk "${searchTerm}"`
-                                    : "Mulai dengan menambahkan produk pertama Anda"}
-                            </p>
-                            {!searchTerm && (
-                                <button
-                                    onClick={() => router.push('/dashboard/products/create')}
-                                    style={styles.emptyAction}
-                                >
-                                    + Tambah Produk Pertama
-                                </button>
+                {/* Charts Section */}
+                <div style={styles.chartsSection}>
+                    {/* Stock Distribution Chart */}
+                    <div style={styles.chartCard}>
+                        <h3 style={styles.chartTitle}>📈 Distribusi Stok Produk</h3>
+                        <div style={styles.chartContainer}>
+                            <div style={styles.barChart}>
+                                {products.slice(0, 5).map((product, index) => {
+                                    const maxStock = Math.max(...products.map(p => p.stock || 0));
+                                    const barHeight = maxStock > 0 ? ((product.stock || 0) / maxStock) * 100 : 0;
+                                    const colors = ['#4f46e5', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
+                                    return (
+                                        <div key={product.id} style={styles.barContainer}>
+                                            <div style={styles.barWrapper}>
+                                                <div
+                                                    style={{
+                                                        ...styles.bar,
+                                                        height: `${barHeight}%`,
+                                                        backgroundColor: colors[index % colors.length]
+                                                    }}
+                                                />
+                                            </div>
+                                            <span style={styles.barLabel}>{product.name?.substring(0, 10) || 'Product'}</span>
+                                            <span style={styles.barValue}>{product.stock || 0}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Price Range Chart */}
+                    <div style={styles.chartCard}>
+                        <h3 style={styles.chartTitle}>💵 Kategori Harga</h3>
+                        <div style={styles.pieChartContainer}>
+                            {(() => {
+                                const priceRanges = [
+                                    { label: '< 50K', min: 0, max: 50000, color: '#4f46e5' },
+                                    { label: '50K - 100K', min: 50000, max: 100000, color: '#8b5cf6' },
+                                    { label: '100K - 500K', min: 100000, max: 500000, color: '#06b6d4' },
+                                    { label: '> 500K', min: 500000, max: Infinity, color: '#10b981' }
+                                ];
+                                const rangeCounts = priceRanges.map(range =>
+                                    products.filter(p => p.price >= range.min && p.price < range.max).length
+                                );
+                                const total = rangeCounts.reduce((a, b) => a + b, 0) || 1;
+
+                                return (
+                                    <>
+                                        <div style={styles.pieChart}>
+                                            {priceRanges.map((range, index) => {
+                                                const percentage = (rangeCounts[index] / total) * 100;
+                                                if (percentage === 0) return null;
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        style={{
+                                                            ...styles.pieSlice,
+                                                            backgroundColor: range.color,
+                                                            width: `${percentage}%`,
+                                                        }}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                        <div style={styles.legendContainer}>
+                                            {priceRanges.map((range, index) => (
+                                                <div key={index} style={styles.legendItem}>
+                                                    <span style={{ ...styles.legendDot, backgroundColor: range.color }} />
+                                                    <span style={styles.legendLabel}>{range.label}</span>
+                                                    <span style={styles.legendValue}>{rangeCounts[index]} produk</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    </div>
+
+                    {/* Recent Activity */}
+                    <div style={styles.chartCard}>
+                        <h3 style={styles.chartTitle}>🕐 Aktivitas Terbaru</h3>
+                        <div style={styles.activityList}>
+                            {products.slice(0, 5).map((product, index) => (
+                                <div key={product.id} style={styles.activityItem}>
+                                    <div style={styles.activityIcon}>📦</div>
+                                    <div style={styles.activityContent}>
+                                        <span style={styles.activityText}>Produk ditambahkan</span>
+                                        <span style={styles.activityName}>{product.name}</span>
+                                    </div>
+                                    <span style={styles.activityTime}>
+                                        {new Date(product.createdAt).toLocaleDateString('id-ID')}
+                                    </span>
+                                </div>
+                            ))}
+                            {products.length === 0 && (
+                                <div style={styles.emptyActivity}>Belum ada aktivitas</div>
                             )}
                         </div>
-                    ) : (
-                        <table style={styles.table}>
-                            <thead>
-                                <tr style={styles.tableHeaderRow}>
-                                    <th style={styles.tableHeader}>
-                                        No
-                                    </th>
-                                    <th style={styles.tableHeader} onClick={() => handleSort('name')}>
-                                        Nama Produk {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                                    </th>
-                                    <th style={styles.tableHeader} onClick={() => handleSort('price')}>
-                                        Harga {sortConfig.key === 'price' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                                    </th>
-                                    <th style={styles.tableHeader} onClick={() => handleSort('stock')}>
-                                        Stok {sortConfig.key === 'stock' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                                    </th>
-                                    <th style={styles.tableHeader} onClick={() => handleSort('createdAt')}>
-                                        Dibuat {sortConfig.key === 'createdAt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                                    </th>
-                                    <th style={styles.tableHeader}>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredProducts.map((product, index) => (
-                                    <tr key={product.id} style={styles.tableRow}>
-                                        <td style={styles.tableCell}>
-                                            <div style={styles.productCell}>
-                                                <div style={styles.productName}>
-                                                    {index + 1}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style={styles.tableCell}>
-                                            <div style={styles.productCell}>
-                                                {product.image ? (
-                                                    <img
-                                                        src={`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}${product.image}`}
-                                                        alt={product.name}
-                                                        style={styles.productImage}
-                                                    />
-                                                ) : (
-                                                    <div style={styles.productAvatar}>
-                                                        {product.name.charAt(0).toUpperCase()}
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <div style={styles.productName}>{product.name}</div>
-                                                    <div style={styles.productDescription}>
-                                                        {product.description?.substring(0, 50)}
-                                                        {product.description?.length > 50 && '...'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style={styles.tableCell}>
-                                            <div style={styles.priceCell}>
-                                                <span style={styles.price}>{rupiah.format(product.price)}</span>
-                                            </div>
-                                        </td>
-                                        <td style={styles.tableCell}>
-                                            <div style={styles.stockCell}>
-                                                <span style={{
-                                                    ...styles.stockBadge,
-                                                    backgroundColor: product.stock > 10 ? '#d1fae5' :
-                                                        product.stock > 0 ? '#fef3c7' : '#fee2e2',
-                                                    color: product.stock > 10 ? '#065f46' :
-                                                        product.stock > 0 ? '#92400e' : '#991b1b'
-                                                }}>
-                                                    {product.stock > 0 ? `${product.stock} unit` : 'Habis'}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td style={styles.tableCell}>
-                                            <div style={styles.dateCell}>
-                                                <div>{new Date(product.createdAt).toLocaleDateString('id-ID')}</div>
-                                                <div style={styles.timeText}>
-                                                    {new Date(product.createdAt).toLocaleTimeString('id-ID', {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td style={styles.tableCell}>
-                                            <div style={styles.actionButtons}>
-                                                <button
-                                                    onClick={() => handleEdit(product.id)}
-                                                    style={styles.editBtn}
-                                                    title="Edit produk"
-                                                >
-                                                    ✏️ Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(product.id)}
-                                                    style={styles.deleteBtn}
-                                                    disabled={loading}
-                                                    title="Hapus produk"
-                                                >
-                                                    🗑️ Hapus
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
+                    </div>
                 </div>
-            </main>
+
+                {/* Quick Actions */}
+                <div style={styles.quickActions}>
+                    <button
+                        onClick={() => router.push('/dashboard/products/create')}
+                        style={styles.primaryAction}
+                    >
+                        <span style={styles.actionIcon}>➕</span>
+                        Tambah Produk Baru
+                    </button>
+                    <button
+                        onClick={() => router.push('/dashboard/admin/orders')}
+                        style={styles.secondaryAction}
+                    >
+                        <span style={styles.actionIcon}>📋</span>
+                        Lihat Semua Pesanan
+                    </button>
+                </div>
+
+                {/* Spacer to push footer to bottom */}
+                <div style={styles.spacer} />
+            </div>
 
             {/* Footer */}
             <footer style={styles.footer}>
@@ -407,6 +378,8 @@ export default function AdminDashboard({ products: initialProducts = [] }) {
 const styles = {
     container: {
         minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
         backgroundColor: '#f8fafc',
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
     },
@@ -489,6 +462,25 @@ const styles = {
         alignItems: 'center',
         gap: '8px',
         transition: 'all 0.3s ease'
+    },
+    navButton: {
+        padding: '10px 20px',
+        backgroundColor: 'white',
+        color: '#4b5563',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '500',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        transition: 'all 0.2s ease'
+    },
+    navButtonActive: {
+        backgroundColor: '#4f46e5',
+        color: 'white',
+        borderColor: '#4f46e5'
     },
     logoutBtn: {
         padding: '10px 20px',
@@ -580,6 +572,14 @@ const styles = {
     },
     actionIcon: {
         fontSize: '16px'
+    },
+    mainArea: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column'
+    },
+    spacer: {
+        flex: 1
     },
     mainContent: {
         backgroundColor: 'white',
@@ -783,6 +783,157 @@ const styles = {
         fontWeight: '500',
         cursor: 'pointer',
         transition: 'all 0.3s ease'
+    },
+    chartsSection: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '20px',
+        padding: '0 30px 30px'
+    },
+    chartCard: {
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '24px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+    },
+    chartTitle: {
+        fontSize: '16px',
+        fontWeight: '600',
+        margin: '0 0 20px 0',
+        color: '#1f2937'
+    },
+    chartContainer: {
+        height: '200px'
+    },
+    barChart: {
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'space-around',
+        height: '100%',
+        gap: '10px'
+    },
+    barContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        flex: 1,
+        maxWidth: '60px'
+    },
+    barWrapper: {
+        height: '140px',
+        width: '100%',
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'center'
+    },
+    bar: {
+        width: '100%',
+        borderRadius: '6px 6px 0 0',
+        minHeight: '4px',
+        transition: 'height 0.3s ease'
+    },
+    barLabel: {
+        fontSize: '11px',
+        color: '#6b7280',
+        marginTop: '8px',
+        textAlign: 'center',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        width: '100%'
+    },
+    barValue: {
+        fontSize: '12px',
+        fontWeight: '600',
+        color: '#1f2937'
+    },
+    pieChartContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px'
+    },
+    pieChart: {
+        display: 'flex',
+        height: '30px',
+        borderRadius: '6px',
+        overflow: 'hidden',
+        backgroundColor: '#f3f4f6'
+    },
+    pieSlice: {
+        height: '100%',
+        transition: 'width 0.3s ease'
+    },
+    legendContainer: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px'
+    },
+    legendItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px'
+    },
+    legendDot: {
+        width: '12px',
+        height: '12px',
+        borderRadius: '3px'
+    },
+    legendLabel: {
+        flex: 1,
+        fontSize: '13px',
+        color: '#4b5563'
+    },
+    legendValue: {
+        fontSize: '13px',
+        fontWeight: '500',
+        color: '#1f2937'
+    },
+    activityList: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px'
+    },
+    activityItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '12px',
+        backgroundColor: '#f9fafb',
+        borderRadius: '8px'
+    },
+    activityIcon: {
+        width: '36px',
+        height: '36px',
+        borderRadius: '8px',
+        backgroundColor: '#eef2ff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '16px'
+    },
+    activityContent: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column'
+    },
+    activityText: {
+        fontSize: '12px',
+        color: '#6b7280'
+    },
+    activityName: {
+        fontSize: '13px',
+        fontWeight: '500',
+        color: '#1f2937'
+    },
+    activityTime: {
+        fontSize: '12px',
+        color: '#9ca3af'
+    },
+    emptyActivity: {
+        textAlign: 'center',
+        padding: '40px 20px',
+        color: '#9ca3af',
+        fontSize: '14px'
     },
     footer: {
         backgroundColor: 'white',

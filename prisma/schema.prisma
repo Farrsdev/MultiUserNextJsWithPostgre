@@ -20,7 +20,7 @@ model User {
   sessions      Session[]
   orders        Order[]
   cartItems     CartItem[]
-  payments      Payment[]    // <-- TAMBAHKAN INI
+  payments      Payment[]   
 }
 
 model Account {

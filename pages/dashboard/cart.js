@@ -168,9 +168,9 @@ export default function CartPage() {
                                 <div key={item.id} style={styles.cartItem}>
                                     {/* Product Image */}
                                     <div style={styles.itemImageContainer}>
-                                        {item.product?.imageUrl ? (
+                                        {item.product?.image ? (
                                             <img
-                                                src={item.product.imageUrl}
+                                                src={item.product.image}
                                                 alt={item.product.name}
                                                 style={styles.itemImage}
                                             />

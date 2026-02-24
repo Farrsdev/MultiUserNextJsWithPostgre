@@ -56,37 +56,37 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
     const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
     const statusConfig = {
-        pending: { 
-            label: '⏳ Pending', 
-            color: '#f59e0b', 
+        pending: {
+            label: '⏳ Pending',
+            color: '#f59e0b',
             bg: '#fffbeb',
             border: '#fcd34d',
             next: ['processing', 'cancelled']
         },
-        processing: { 
-            label: '🔄 Processing', 
-            color: '#3b82f6', 
+        processing: {
+            label: '🔄 Processing',
+            color: '#3b82f6',
             bg: '#eff6ff',
             border: '#93c5fd',
             next: ['shipped', 'cancelled']
         },
-        shipped: { 
-            label: '📦 Shipped', 
-            color: '#8b5cf6', 
+        shipped: {
+            label: '📦 Shipped',
+            color: '#8b5cf6',
             bg: '#f5f3ff',
             border: '#c4b5fd',
             next: ['delivered', 'cancelled']
         },
-        delivered: { 
-            label: '✅ Delivered', 
-            color: '#10b981', 
+        delivered: {
+            label: '✅ Delivered',
+            color: '#10b981',
             bg: '#f0fdf4',
             border: '#a7f3d0',
             next: []
         },
-        cancelled: { 
-            label: '❌ Cancelled', 
-            color: '#ef4444', 
+        cancelled: {
+            label: '❌ Cancelled',
+            color: '#ef4444',
             bg: '#fef2f2',
             border: '#fecaca',
             next: []
@@ -127,10 +127,10 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
 
             if (res.ok) {
                 const updatedOrder = await res.json();
-                setOrders(orders.map(order => 
+                setOrders(orders.map(order =>
                     order.id === orderId ? updatedOrder : order
                 ));
-                
+
                 if (selectedOrder?.id === orderId) {
                     setSelectedOrder(updatedOrder);
                 }
@@ -199,7 +199,7 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                 order.id.toLowerCase().includes(searchLower) ||
                 order.user?.name?.toLowerCase().includes(searchLower) ||
                 order.user?.email?.toLowerCase().includes(searchLower) ||
-                order.items?.some(item => 
+                order.items?.some(item =>
                     item.product?.name?.toLowerCase().includes(searchLower)
                 )
             );
@@ -209,7 +209,7 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
             const orderDate = new Date(order.createdAt);
             const start = dateRange.start ? new Date(dateRange.start) : null;
             const end = dateRange.end ? new Date(dateRange.end) : null;
-            
+
             if (start && end) {
                 return orderDate >= start && orderDate <= end;
             } else if (start) {
@@ -248,17 +248,36 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                 <div style={styles.headerActions}>
                     <button
                         onClick={() => router.push('/dashboard/admin')}
-                        style={styles.secondaryBtn}
+                        style={{
+                            ...styles.navButton,
+                            ...(router.pathname === '/dashboard/admin' ? styles.navButtonActive : {})
+                        }}
+                    >
+                        <span>📊</span>
+                        Dashboard
+                    </button>
+                    <button
+                        onClick={() => router.push('/dashboard/products')}
+                        style={{
+                            ...styles.navButton,
+                            ...(router.pathname.includes('/products') ? styles.navButtonActive : {})
+                        }}
                     >
                         <span>📦</span>
                         Products
                     </button>
                     <button
-                        onClick={handleLogout}
-                        style={styles.logoutBtn}
-                        disabled={loading}
+                        onClick={() => router.push('/dashboard/admin/orders')}
+                        style={{
+                            ...styles.navButton,
+                            ...(router.pathname.includes('/admin/orders') ? styles.navButtonActive : {})
+                        }}
                     >
-                        <span style={styles.logoutIcon}>🚪</span>
+                        <span>📋</span>
+                        Orders
+                    </button>
+                    <button onClick={handleLogout} style={styles.logoutBtn}>
+                        <span>🚪</span>
                         Logout
                     </button>
                 </div>
@@ -365,7 +384,7 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                             style={styles.searchInput}
                         />
                     </div>
-                    
+
                     <div style={styles.dateFilter}>
                         <input
                             type="date"
@@ -434,7 +453,7 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                                 {filteredOrders.map((order) => {
                                     const status = statusConfig[order.status] || statusConfig.pending;
                                     const itemCount = order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-                                    
+
                                     return (
                                         <tr key={order.id} style={styles.tableRow}>
                                             <td style={styles.tableCell}>
@@ -515,9 +534,9 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                                                         <>
                                                             <span style={styles.paymentMethod}>
                                                                 {order.payment.method === 'bank_transfer' ? '🏦 Bank Transfer' :
-                                                                 order.payment.method === 'virtual_account' ? '🏧 VA' :
-                                                                 order.payment.method === 'ewallet' ? '📱 E-Wallet' :
-                                                                 order.payment.method === 'credit_card' ? '💳 Credit Card' : '💵 Cash'}
+                                                                    order.payment.method === 'virtual_account' ? '🏧 VA' :
+                                                                        order.payment.method === 'ewallet' ? '📱 E-Wallet' :
+                                                                            order.payment.method === 'credit_card' ? '💳 Credit Card' : '💵 Cash'}
                                                             </span>
                                                             <span style={styles.paymentStatus}>
                                                                 {order.payment.status === 'completed' ? '✅ Paid' : '⏳ Pending'}
@@ -543,7 +562,7 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                                                             </option>
                                                         ))}
                                                     </select>
-                                                    
+
                                                     <button
                                                         onClick={() => {
                                                             setSelectedOrder(order);
@@ -652,7 +671,7 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                                         </div>
                                     ))}
                                 </div>
-                                
+
                                 <div style={styles.totalSummary}>
                                     <div style={styles.summaryRow}>
                                         <span>Subtotal</span>
@@ -681,9 +700,9 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                                         <span style={styles.infoLabel}>Payment Method:</span>
                                         <span style={styles.infoValue}>
                                             {selectedOrder.payment?.method === 'bank_transfer' ? 'Bank Transfer' :
-                                             selectedOrder.payment?.method === 'virtual_account' ? 'Virtual Account' :
-                                             selectedOrder.payment?.method === 'ewallet' ? 'E-Wallet' :
-                                             selectedOrder.payment?.method === 'credit_card' ? 'Credit Card' : '-'}
+                                                selectedOrder.payment?.method === 'virtual_account' ? 'Virtual Account' :
+                                                    selectedOrder.payment?.method === 'ewallet' ? 'E-Wallet' :
+                                                        selectedOrder.payment?.method === 'credit_card' ? 'Credit Card' : '-'}
                                         </span>
                                     </div>
                                     <div style={styles.infoRow}>
@@ -713,10 +732,10 @@ export default function AdminOrders({ orders: initialOrders = [] }) {
                                 <div style={styles.statusUpdateGrid}>
                                     {Object.entries(statusConfig).map(([key, config]) => {
                                         const isCurrent = selectedOrder.status === key;
-                                        const isDisabled = !statusConfig[selectedOrder.status]?.next.includes(key) && 
-                                                          selectedOrder.status !== key &&
-                                                          key !== 'cancelled';
-                                        
+                                        const isDisabled = !statusConfig[selectedOrder.status]?.next.includes(key) &&
+                                            selectedOrder.status !== key &&
+                                            key !== 'cancelled';
+
                                         return (
                                             <button
                                                 key={key}
@@ -839,6 +858,25 @@ const styles = {
         alignItems: 'center',
         gap: '8px',
         transition: 'all 0.3s ease'
+    },
+    navButton: {
+        padding: '10px 20px',
+        backgroundColor: 'white',
+        color: '#4b5563',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '500',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        transition: 'all 0.2s ease'
+    },
+    navButtonActive: {
+        backgroundColor: '#4f46e5',
+        color: 'white',
+        borderColor: '#4f46e5'
     },
     logoutBtn: {
         padding: '10px 20px',
